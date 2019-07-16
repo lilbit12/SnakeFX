@@ -34,8 +34,10 @@ public class Main extends Application {
 	Group snakeComponents;
 	
 	
-	private boolean movingRight = false;
-	private boolean movingDown = true;
+	private boolean movingRight = true;
+	private boolean movingDown = false;
+	private boolean movingLeft = false;
+	private boolean movingUp = false;
 	
 	Button startButton;
 	BooleanProperty startVisible = new SimpleBooleanProperty(true);
@@ -56,7 +58,7 @@ public class Main extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		
 		rec = new Rectangle(30, 30, Color.RED);
-		Timeline snakeAnimation = new Timeline(new KeyFrame(new Duration(10.0), t ->  {
+		Timeline snakeAnimation = new Timeline(new KeyFrame(new Duration(2.5), t ->  {
 			
 			checkForCollision();
 			int horzPixels;
@@ -65,9 +67,15 @@ public class Main extends Application {
 			if(movingRight) {
 				horzPixels = 1;
 				snakeX.setValue(snakeX.getValue() + horzPixels);
-			} else{
+			} else if(movingDown){
 				vertPixels = 1;
 				snakeY.setValue(snakeY.getValue() + vertPixels);
+			} else if(movingLeft) {
+				horzPixels = 1;
+				snakeX.setValue(snakeX.getValue() - horzPixels);
+			} else if(movingUp) {
+				vertPixels = 1;
+				snakeY.setValue(snakeY.getValue() - vertPixels);
 			}
 			
 		}));
@@ -107,10 +115,24 @@ public class Main extends Application {
         	if(k.getCode()== KeyCode.D) {
         		movingRight = true;
         		movingDown = false;
+        		movingUp = false;
+        		movingLeft = false;
         	} else if (k.getCode()== KeyCode.S) {
         		movingRight = false;
         		movingDown = true;
-        	}
+        		movingUp = false;
+        		movingLeft = false;
+        	} else if(k.getCode() == KeyCode.W) {
+        		movingRight = false;
+        		movingDown = false;
+        		movingUp = true;
+        		movingLeft = false;
+        	} else if(k.getCode() == KeyCode.A){
+        		movingRight = false;
+        		movingDown = false;
+        		movingUp = false;
+        		movingLeft = true;
+        }
         });
         
         
