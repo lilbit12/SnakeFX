@@ -28,16 +28,18 @@ public class Main extends Application {
 	
 	
 	Rectangle rec;
-	DoubleProperty snakeX = new SimpleDoubleProperty();
-	DoubleProperty snakeY = new SimpleDoubleProperty();
+	DoubleProperty snakeX = new SimpleDoubleProperty(250);
+	DoubleProperty snakeY = new SimpleDoubleProperty(250);
 	
 	Group snakeComponents;
 	
+	public enum Direction{
+		UP,DOWN,LEFT,RIGHT
+	}
 	
-	private boolean movingRight = true;
-	private boolean movingDown = false;
-	private boolean movingLeft = false;
-	private boolean movingUp = false;
+	private Direction direction = Direction.RIGHT;
+	
+	
 	
 	Button startButton;
 	BooleanProperty startVisible = new SimpleBooleanProperty(true);
@@ -58,26 +60,26 @@ public class Main extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		
 		rec = new Rectangle(30, 30, Color.RED);
-		Timeline snakeAnimation = new Timeline(new KeyFrame(new Duration(2.5), t ->  {
+		Timeline snakeAnimation = new Timeline(new KeyFrame(new Duration(5), t ->  {
 			
 			checkForCollision();
-			int horzPixels;
-			int vertPixels;
 			
-			if(movingRight) {
-				horzPixels = 1;
-				snakeX.setValue(snakeX.getValue() + horzPixels);
-			} else if(movingDown){
-				vertPixels = 1;
-				snakeY.setValue(snakeY.getValue() + vertPixels);
-			} else if(movingLeft) {
-				horzPixels = 1;
-				snakeX.setValue(snakeX.getValue() - horzPixels);
-			} else if(movingUp) {
-				vertPixels = 1;
-				snakeY.setValue(snakeY.getValue() - vertPixels);
+			switch (direction) {
+			case RIGHT:
+				snakeX.setValue(snakeX.getValue() + 1);
+				break;
+			case LEFT:
+				snakeX.setValue(snakeX.getValue() - 1);
+				break;
+			case UP:
+				snakeY.setValue(snakeY.getValue() - 1);
+				break;
+			case DOWN:
+				snakeY.setValue(snakeY.getValue() +1);
+			default:
+				break;
 			}
-			
+				
 		}));
 		
 		snakeAnimation.setCycleCount(Timeline.INDEFINITE);
@@ -112,26 +114,14 @@ public class Main extends Application {
         
         
         snakeComponents.setOnKeyPressed(k -> {
-        	if(k.getCode()== KeyCode.D) {
-        		movingRight = true;
-        		movingDown = false;
-        		movingUp = false;
-        		movingLeft = false;
-        	} else if (k.getCode()== KeyCode.S) {
-        		movingRight = false;
-        		movingDown = true;
-        		movingUp = false;
-        		movingLeft = false;
-        	} else if(k.getCode() == KeyCode.W) {
-        		movingRight = false;
-        		movingDown = false;
-        		movingUp = true;
-        		movingLeft = false;
-        	} else if(k.getCode() == KeyCode.A){
-        		movingRight = false;
-        		movingDown = false;
-        		movingUp = false;
-        		movingLeft = true;
+        	if(k.getCode()== KeyCode.RIGHT) {
+        		direction = Direction.RIGHT;
+        	} else if (k.getCode()== KeyCode.DOWN) {
+        		direction = Direction.DOWN;
+        	} else if(k.getCode() == KeyCode.UP) {
+        		direction = Direction.UP;
+        	} else if(k.getCode() == KeyCode.LEFT){
+        		direction = Direction.LEFT;
         }
         });
         
@@ -140,20 +130,18 @@ public class Main extends Application {
         primaryStage.setTitle("Custom animation");
         primaryStage.show();
         
-        
-        
 	}
 	
 	private void checkForCollision() {
-		if (rec.intersects(rightWall.getBoundsInLocal())){
+		if ((rec.intersects(rightWall.getBoundsInLocal()) && direction == Direction.RIGHT)) {
 			snakeX.set(0-30);
-		} else if (rec.intersects(bottomWall.getBoundsInLocal())) {
-			snakeY.set(0-30);
+		} else if (rec.intersects(rightWall.getBoundsInLocal()) && direction == Direction.LEFT) {
+			snakeX.set(499);
+		} else if (rec.intersects(leftWall.getBoundsInLocal()) && direction == Direction.LEFT) {
+			snakeX.set(500);
+		} else if (rec.intersects(leftWall.getBoundsInLocal()) && direction == Direction.RIGHT) {
+			snakeX.set(1);
 		}
-		
-		
-		
-		
 	}
 
 	void initialize() {
