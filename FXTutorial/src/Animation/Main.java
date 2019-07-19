@@ -27,9 +27,22 @@ import javafx.util.Duration;
 public class Main extends Application {
 	
 	
-	Rectangle rec;
-	DoubleProperty snakeX = new SimpleDoubleProperty(250);
-	DoubleProperty snakeY = new SimpleDoubleProperty(250);
+	
+	
+	Rectangle apple;
+	
+	DoubleProperty appleX = new SimpleDoubleProperty((int) Math.random()*470);
+	DoubleProperty appleY = new SimpleDoubleProperty((int) Math.random()*470);
+	
+	
+	Rectangle snakeHead;
+	DoubleProperty snakeHeadX = new SimpleDoubleProperty(250);
+	DoubleProperty snakeHeadY = new SimpleDoubleProperty(250);
+	
+	Rectangle snakeTail;
+	
+	
+	
 	
 	Group snakeComponents;
 	
@@ -45,11 +58,12 @@ public class Main extends Application {
 	BooleanProperty startVisible = new SimpleBooleanProperty(true);
 	
 	
-	
 	private Rectangle topWall;
 	private Rectangle leftWall;
 	private Rectangle rightWall;
 	private Rectangle bottomWall;
+	private Button pauseButton;
+	private Timeline snakeAnimation;
 	
 	
 	public static void main(String[] args) {
@@ -59,23 +73,26 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		
-		rec = new Rectangle(30, 30, Color.RED);
-		Timeline snakeAnimation = new Timeline(new KeyFrame(new Duration(5), t ->  {
+		snakeTail = new Rectangle(30,30,Color.BLACK);
+		snakeHead = new Rectangle(30, 30, Color.BLUE);
+		apple = new Rectangle(30,30,Color.RED);
+		snakeAnimation = new Timeline(new KeyFrame(new Duration(10), t ->  {
 			
 			checkForCollision();
 			
 			switch (direction) {
 			case RIGHT:
-				snakeX.setValue(snakeX.getValue() + 1);
+				snakeHeadX.setValue(snakeHeadX.getValue() + 1);
+				
 				break;
 			case LEFT:
-				snakeX.setValue(snakeX.getValue() - 1);
+				snakeHeadX.setValue(snakeHeadX.getValue() - 1);
 				break;
 			case UP:
-				snakeY.setValue(snakeY.getValue() - 1);
+				snakeHeadY.setValue(snakeHeadY.getValue() - 1);
 				break;
 			case DOWN:
-				snakeY.setValue(snakeY.getValue() +1);
+				snakeHeadY.setValue(snakeHeadY.getValue() +1);
 			default:
 				break;
 			}
@@ -94,19 +111,27 @@ public class Main extends Application {
             snakeComponents.requestFocus();
         });
         
+        pauseButton = new Button("Pause");
+        pauseButton.setLayoutX(300);
+        pauseButton.setLayoutY(520);
+        pauseButton.setOnAction(e -> {
+        	snakeAnimation.pause();
+        });
         
-        
-        
+             
         topWall = new Rectangle(0, 0, 500, 1);
         leftWall = new Rectangle(0, 0, 1, 500);
         rightWall = new Rectangle(500, 0, 1, 500);
         bottomWall = new Rectangle(0, 500, 500, 1);
         
         
-        snakeComponents = new Group(rec,topWall,leftWall,bottomWall,rightWall,startButton);
+        snakeComponents = new Group(snakeHead,topWall,leftWall,bottomWall,rightWall,startButton,pauseButton,apple);
         
-        rec.xProperty().bind(snakeX);
-        rec.yProperty().bind(snakeY);
+        snakeHead.xProperty().bind(snakeHeadX);
+        snakeHead.yProperty().bind(snakeHeadY);
+        
+        apple.xProperty().bind(appleX);
+        apple.yProperty().bind(appleY);
         
         
         Scene scene = new Scene(snakeComponents, 600, 600);
@@ -133,20 +158,30 @@ public class Main extends Application {
 	}
 	
 	private void checkForCollision() {
-		if ((rec.intersects(rightWall.getBoundsInLocal()) && direction == Direction.RIGHT)) {
-			snakeX.set(0-30);
-		} else if (rec.intersects(rightWall.getBoundsInLocal()) && direction == Direction.LEFT) {
-			snakeX.set(499);
-		} else if (rec.intersects(leftWall.getBoundsInLocal()) && direction == Direction.LEFT) {
-			snakeX.set(500);
-		} else if (rec.intersects(leftWall.getBoundsInLocal()) && direction == Direction.RIGHT) {
-			snakeX.set(1);
+		
+		if ((snakeHead.intersects(rightWall.getBoundsInLocal())) ||
+				snakeHead.intersects(leftWall.getBoundsInLocal()) ||
+				snakeHead.intersects(topWall.getBoundsInLocal())||
+				snakeHead.intersects(bottomWall.getBoundsInLocal())){
+				snakeAnimation.stop();
+				initialize();
 		}
+		
+		if(snakeHead.intersects(apple.getBoundsInLocal())) {
+			appleX.setValue((int) (Math.random()*470));
+			appleY.setValue((int) (Math.random()*470));
+		}
+		
+		
 	}
 
 	void initialize() {
-		snakeX.setValue(250);
-		snakeY.setValue(250);
+		snakeHeadX.setValue(250);
+		snakeHeadY.setValue(250);
+		
+		appleX.setValue((int) (Math.random()*470) / 30 * 30);
+		appleY.setValue((int) (Math.random()*470) / 30 * 30);
+		
 		snakeComponents.requestFocus();
 	}
 	
