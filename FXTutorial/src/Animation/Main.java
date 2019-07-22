@@ -13,8 +13,10 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
@@ -64,6 +66,8 @@ public class Main extends Application {
 	private Rectangle bottomWall;
 	private Button pauseButton;
 	private Timeline snakeAnimation;
+	private ObservableList<Node> snake;
+	Group snakeBody;
 	
 	
 	public static void main(String[] args) {
@@ -76,23 +80,33 @@ public class Main extends Application {
 		snakeTail = new Rectangle(30,30,Color.BLACK);
 		snakeHead = new Rectangle(30, 30, Color.BLUE);
 		apple = new Rectangle(30,30,Color.RED);
-		snakeAnimation = new Timeline(new KeyFrame(new Duration(10), t ->  {
+		
+		snakeBody = new Group();
+		
+		snake = snakeBody.getChildren();
+		snake.add(snakeHead);
+		
+		snake.addListener(new MyListener());
+		
+		
+		
+		snakeAnimation = new Timeline(new KeyFrame(new Duration(500), t ->  {
 			
 			checkForCollision();
 			
 			switch (direction) {
 			case RIGHT:
-				snakeHeadX.setValue(snakeHeadX.getValue() + 1);
+				snakeHeadX.setValue(snakeHeadX.getValue() + 30);
 				
 				break;
 			case LEFT:
-				snakeHeadX.setValue(snakeHeadX.getValue() - 1);
+				snakeHeadX.setValue(snakeHeadX.getValue() - 30);
 				break;
 			case UP:
-				snakeHeadY.setValue(snakeHeadY.getValue() - 1);
+				snakeHeadY.setValue(snakeHeadY.getValue() - 30);
 				break;
 			case DOWN:
-				snakeHeadY.setValue(snakeHeadY.getValue() +1);
+				snakeHeadY.setValue(snakeHeadY.getValue() +30);
 			default:
 				break;
 			}
@@ -125,7 +139,7 @@ public class Main extends Application {
         bottomWall = new Rectangle(0, 500, 500, 1);
         
         
-        snakeComponents = new Group(snakeHead,topWall,leftWall,bottomWall,rightWall,startButton,pauseButton,apple);
+        snakeComponents = new Group(snakeBody,topWall,leftWall,bottomWall,rightWall,startButton,pauseButton,apple);
         
         snakeHead.xProperty().bind(snakeHeadX);
         snakeHead.yProperty().bind(snakeHeadY);
@@ -170,6 +184,9 @@ public class Main extends Application {
 		if(snakeHead.intersects(apple.getBoundsInLocal())) {
 			appleX.setValue((int) (Math.random()*470));
 			appleY.setValue((int) (Math.random()*470));
+			snakeTail = new Rectangle(30,30,Color.BLACK);
+			
+			snake.add(snakeTail);
 		}
 		
 		
