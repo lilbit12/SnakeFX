@@ -9,6 +9,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
@@ -16,6 +17,7 @@ import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.BorderStrokeStyle;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -28,9 +30,12 @@ public class Main extends Application{
 		UP, DOWN, LEFT, RIGHT
 	}
 	
-	public static final int BLOCK_SIZE = 30;
-	public static final int APP_W = 20*BLOCK_SIZE;
-	public static final int APP_H = 15*BLOCK_SIZE;
+	private Button pauseButton;
+	private HBox menuPanel;
+	
+	public static final int BLOCK_SIZE = 20;
+	public static final int APP_W = 30*BLOCK_SIZE;
+	public static final int APP_H = 20*BLOCK_SIZE;
 	
 	private Direction direction = Direction.RIGHT;
 	private boolean moved = false;
@@ -71,8 +76,7 @@ public class Main extends Application{
 			moved = false;
 		});
 		
-		
-		
+			
 		primaryStage.setTitle("Snake");
 		primaryStage.setScene(scene);
 		primaryStage.show();
@@ -84,8 +88,16 @@ public class Main extends Application{
 
 		
 		Pane root = new Pane();
+		root.setPrefSize(APP_W + (5*BLOCK_SIZE),  APP_H + (3 * BLOCK_SIZE));
 		
-		root.setPrefSize(APP_W + BLOCK_SIZE,  APP_H );
+		
+		HBox buttonPanel = new HBox();
+		buttonPanel.setPadding(new Insets(15, 12, 15, 12));
+		buttonPanel.setSpacing(10);
+		
+		Button pauseButton = new Button("Pause");
+		
+		createMenuPanel();
 		
 		Pane gameArea = new Pane();
 		
@@ -93,19 +105,15 @@ public class Main extends Application{
 		gameArea.setBorder(new Border(new BorderStroke(Color.BLACK, 
 				BorderStrokeStyle.DASHED, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
 		
-		
-		
+	
 		Group snakeBody = new Group();
 		snake = snakeBody.getChildren();
 		
 		Rectangle food = new Rectangle(BLOCK_SIZE,BLOCK_SIZE,Color.RED);
 		
+		setNewFoodPosition(snake, food);
 		
-		
-		food.setTranslateX((int)(Math.random() * (APP_W - BLOCK_SIZE))/BLOCK_SIZE * BLOCK_SIZE);
-		food.setTranslateY((int)(Math.random() * (APP_H - BLOCK_SIZE))/BLOCK_SIZE * BLOCK_SIZE);
-		
-		KeyFrame frame = new KeyFrame(Duration.seconds(0.2), event -> {
+		KeyFrame frame = new KeyFrame(Duration.seconds(0.1), event -> {
 			if(!running) 
 				return;
 			
@@ -121,7 +129,6 @@ public class Main extends Application{
 		
 			switch (direction) {
 			case UP:
-				
 				tail.setTranslateX(snake.get(0).getTranslateX());
 				tail.setTranslateY(snake.get(0).getTranslateY()- BLOCK_SIZE);
 				break;
@@ -158,31 +165,74 @@ public class Main extends Application{
 			}
 			
 			if(tail.getTranslateX() == food.getTranslateX() && tail.getTranslateY() == food.getTranslateY()) {
-				food.setTranslateX((int)(Math.random() * (APP_W - BLOCK_SIZE))/BLOCK_SIZE * BLOCK_SIZE);
-				food.setTranslateY((int)(Math.random() * (APP_H - BLOCK_SIZE))/BLOCK_SIZE * BLOCK_SIZE);
 				
 				Rectangle rect = new Rectangle(BLOCK_SIZE,BLOCK_SIZE);
 				rect.setTranslateX(tailX);
 				rect.setTranslateY(tailY);
-		
 				
 				snake.add(rect);
+				
+				setNewFoodPosition(snake,food);
 			}
-			
-		
-			
 		});
 		
 		timeline.getKeyFrames().add(frame);
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		
 		gameArea.getChildren().addAll(food,snakeBody);
-		root.getChildren().add(gameArea);
-		
+		root.getChildren().addAll(gameArea,menuPanel);
 		
 		return root;
 	}
 	
+	private void createMenuPanel() {
+		menuPanel = new HBox();
+		menuPanel.setPadding(new Insets(10));
+		menuPanel.setLayoutY(APP_H + (BLOCK_SIZE/2));
+		menuPanel.setSpacing(10);
+		
+		pauseButton = new Button("Pause");
+		menuPanel.getChildren().add(pauseButton);
+		
+	}
+
+	private int[] getRandomCoordinates() {
+		
+		int[] result = new int[2];
+		int x = (int)(Math.random() * (APP_W - BLOCK_SIZE))/BLOCK_SIZE * BLOCK_SIZE;
+		int y = (int)(Math.random() * (APP_H - BLOCK_SIZE))/BLOCK_SIZE * BLOCK_SIZE;
+		result[0] = x;
+		result[1] = y;
+		
+		return result;
+	}
+	
+	private void setNewFoodPosition(ObservableList<Node> snake, Rectangle food) {
+		
+		boolean keepSearching = true;
+		int [] coordinatesProposal = null;
+		
+		while (keepSearching) {
+			coordinatesProposal = getRandomCoordinates();
+		
+			boolean isOccupied = false;
+			for (Node rect : snake) {
+				if(rect.getTranslateX() == coordinatesProposal[0] && 
+						rect.getTranslateY() == coordinatesProposal[1]) {
+					System.out.println("rect.getTranslateX()" + rect.getTranslateX() + " x " + coordinatesProposal[0]);
+					isOccupied = true;
+					break;
+				}
+			}
+			
+			if(!isOccupied)
+				keepSearching = false;
+		}
+		
+		food.setTranslateX(coordinatesProposal[0]);
+		food.setTranslateY(coordinatesProposal[1]);
+	}
+
 	private void restartGame() {
 		stopGame();
 		startGame();
