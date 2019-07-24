@@ -65,7 +65,6 @@ public class Main extends Application{
 		
 		Scene scene = new Scene(createContent());
 		
-
 		scene.setOnKeyPressed( k-> {
 			if(!moved) {
 				return;
@@ -103,20 +102,11 @@ public class Main extends Application{
 		Pane root = new Pane();
 		root.setPrefSize(APP_W + (5*BLOCK_SIZE),  APP_H + (3 * BLOCK_SIZE));
 		
+		//score frame
 		Canvas canvas = new Canvas(APP_W + (5*BLOCK_SIZE), APP_H + (3 * BLOCK_SIZE));
 		gc = canvas.getGraphicsContext2D();
 		
-		gc.fillRect(APP_W,0, 80,50);
-		gc.setFill(Color.BLUE);
-		Font theFont = Font.font( "Arial", FontWeight.BOLD, 24 );
-		gc.setFont(theFont);
-		gc.setStroke(Color.BLACK );
-        gc.setLineWidth(1);
-        pointsText = "Points: " + 0;
-		gc.fillText(pointsText, APP_W, 0);
-		gc.setLineWidth(1);
-		
-		
+		createScoreFrame();
 		createMenuPanel();
 		
 		Pane gameArea = new Pane();
@@ -191,14 +181,7 @@ public class Main extends Application{
 				
 				snake.add(rect);
 				
-                
-				gc.clearRect(0, 0, APP_W + 100, 100);
-				points.set(points.get()+1);
-				System.out.println(points);
-				
-				pointsText = "Points: " + points.get();
-				gc.fillText(pointsText, APP_W, 40);
-				gc.strokeText( pointsText, APP_W, 40 );
+				updateScoreFrame();
 				
 				setNewFoodPosition(snake,food);
 			}
@@ -213,10 +196,33 @@ public class Main extends Application{
 		return root;
 	}
 	
+	private void createScoreFrame() {
+		
+		gc.fillRect(APP_W+20,0, 80,50);
+		gc.setFill(Color.BLUE);
+		Font theFont = Font.font( "Arial", FontWeight.BOLD, 24 );
+		gc.setFont(theFont);
+		gc.setStroke(Color.BLACK );
+        gc.setLineWidth(1);
+        pointsText = "" + 0;
+		gc.fillText(pointsText, APP_W, 0);
+		gc.setLineWidth(1);
+		
+	}
+	
+	private void updateScoreFrame() {
+		gc.clearRect(0, 0, APP_W + 100, 100);
+		points.set(points.get()+1);
+		System.out.println(points);
+		
+		pointsText = points.get()+"";
+		gc.fillText(pointsText, APP_W, 40);
+		gc.strokeText( pointsText, APP_W, 40 );
+	}
+
 	private void createMenuPanel() {
 		
 		menuPanel = new HBox();
-		
 		menuPanel.setPadding(new Insets(10));
 		menuPanel.setLayoutY(APP_H + (BLOCK_SIZE/2));
 		menuPanel.setSpacing(10);
