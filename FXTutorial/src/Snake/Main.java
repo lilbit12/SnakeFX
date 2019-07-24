@@ -1,15 +1,24 @@
 package Snake;
 
+import javafx.animation.Animation.Status;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.Mnemonic;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Border;
@@ -21,6 +30,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -30,12 +41,16 @@ public class Main extends Application{
 		UP, DOWN, LEFT, RIGHT
 	}
 	
+	private GraphicsContext gc;
 	private Button pauseButton;
 	private HBox menuPanel;
 	
 	public static final int BLOCK_SIZE = 20;
 	public static final int APP_W = 30*BLOCK_SIZE;
 	public static final int APP_H = 20*BLOCK_SIZE;
+	
+	private String pointsText;
+	private IntegerProperty points;
 	
 	private Direction direction = Direction.RIGHT;
 	private boolean moved = false;
@@ -50,6 +65,7 @@ public class Main extends Application{
 		
 		Scene scene = new Scene(createContent());
 		
+
 		scene.setOnKeyPressed( k-> {
 			if(!moved) {
 				return;
@@ -76,26 +92,30 @@ public class Main extends Application{
 			moved = false;
 		});
 		
-			
 		primaryStage.setTitle("Snake");
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		startGame();
-		
 	}
 
 	private Parent createContent() {
 
-		
 		Pane root = new Pane();
 		root.setPrefSize(APP_W + (5*BLOCK_SIZE),  APP_H + (3 * BLOCK_SIZE));
 		
+		Canvas canvas = new Canvas(APP_W + (5*BLOCK_SIZE), APP_H + (3 * BLOCK_SIZE));
+		gc = canvas.getGraphicsContext2D();
 		
-		HBox buttonPanel = new HBox();
-		buttonPanel.setPadding(new Insets(15, 12, 15, 12));
-		buttonPanel.setSpacing(10);
+		gc.fillRect(APP_W,0, 80,50);
+		gc.setFill(Color.BLUE);
+		Font theFont = Font.font( "Arial", FontWeight.BOLD, 24 );
+		gc.setFont(theFont);
+		gc.setStroke(Color.BLACK );
+        gc.setLineWidth(1);
+        pointsText = "Points: " + 0;
+		gc.fillText(pointsText, APP_W, 0);
+		gc.setLineWidth(1);
 		
-		Button pauseButton = new Button("Pause");
 		
 		createMenuPanel();
 		
@@ -110,23 +130,22 @@ public class Main extends Application{
 		snake = snakeBody.getChildren();
 		
 		Rectangle food = new Rectangle(BLOCK_SIZE,BLOCK_SIZE,Color.RED);
-		
+		food.setArcHeight(20);
+		food.setArcWidth(20);
 		setNewFoodPosition(snake, food);
 		
 		KeyFrame frame = new KeyFrame(Duration.seconds(0.1), event -> {
 			if(!running) 
 				return;
 			
-			
+
 			boolean toRemove = snake.size() > 1;
 			
 			Node tail = toRemove ? snake.remove(snake.size()-1) : snake.get(0);
 			
-			
 			double tailX = tail.getTranslateX();
 			double tailY = tail.getTranslateY();
 			
-		
 			switch (direction) {
 			case UP:
 				tail.setTranslateX(snake.get(0).getTranslateX());
@@ -172,6 +191,15 @@ public class Main extends Application{
 				
 				snake.add(rect);
 				
+                
+				gc.clearRect(0, 0, APP_W + 100, 100);
+				points.set(points.get()+1);
+				System.out.println(points);
+				
+				pointsText = "Points: " + points.get();
+				gc.fillText(pointsText, APP_W, 40);
+				gc.strokeText( pointsText, APP_W, 40 );
+				
 				setNewFoodPosition(snake,food);
 			}
 		});
@@ -180,20 +208,30 @@ public class Main extends Application{
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		
 		gameArea.getChildren().addAll(food,snakeBody);
-		root.getChildren().addAll(gameArea,menuPanel);
+		root.getChildren().addAll(gameArea,menuPanel,canvas);
 		
 		return root;
 	}
 	
 	private void createMenuPanel() {
+		
 		menuPanel = new HBox();
+		
 		menuPanel.setPadding(new Insets(10));
 		menuPanel.setLayoutY(APP_H + (BLOCK_SIZE/2));
 		menuPanel.setSpacing(10);
 		
-		pauseButton = new Button("Pause");
+		pauseButton = new Button("_Pause");
 		menuPanel.getChildren().add(pauseButton);
 		
+	
+		pauseButton.setOnAction( k -> {
+			if (timeline.getStatus() == Status.RUNNING) {
+				timeline.pause();
+			} else if(timeline.getStatus() == Status.PAUSED){
+				timeline.playFromStart();
+			}
+		});
 	}
 
 	private int[] getRandomCoordinates() {
@@ -239,6 +277,8 @@ public class Main extends Application{
 	}
 
 	private void startGame() {
+		gc.clearRect(0, 0, APP_W + 100, 100);
+		points = new SimpleIntegerProperty(0);
 		direction = Direction.RIGHT;
 		Rectangle head = new Rectangle(BLOCK_SIZE,BLOCK_SIZE);
 		snake.add(head);
