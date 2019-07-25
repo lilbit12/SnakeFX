@@ -17,6 +17,7 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.Mnemonic;
 import javafx.scene.layout.Background;
@@ -29,7 +30,9 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
@@ -41,16 +44,17 @@ public class Main extends Application{
 		UP, DOWN, LEFT, RIGHT
 	}
 	
+	private Canvas scorePanel;
 	private GraphicsContext gc;
-	private Button pauseButton;
-	private HBox menuPanel;
-	
-	public static final int BLOCK_SIZE = 20;
+
+	public static final int BLOCK_SIZE = 40;
 	public static final int APP_W = 30*BLOCK_SIZE;
 	public static final int APP_H = 20*BLOCK_SIZE;
 	
 	private String pointsText;
 	private IntegerProperty points;
+	
+	private Image apple  = new Image("/Snake/apple.png");
 	
 	private Direction direction = Direction.RIGHT;
 	private boolean moved = false;
@@ -99,32 +103,28 @@ public class Main extends Application{
 
 	private Parent createContent() {
 
-		Pane root = new Pane();
-		root.setPrefSize(APP_W + (5*BLOCK_SIZE),  APP_H + (3 * BLOCK_SIZE));
-		
 		//score frame
-		Canvas canvas = new Canvas(APP_W + (5*BLOCK_SIZE), APP_H + (3 * BLOCK_SIZE));
-		gc = canvas.getGraphicsContext2D();
+		scorePanel = new Canvas(APP_W, 100);
+		gc = scorePanel.getGraphicsContext2D();
 		
 		createScoreFrame();
-		createMenuPanel();
+		
 		
 		Pane gameArea = new Pane();
+		gameArea.setStyle("-fx-background-color: #F0F8FF");
 		
 		gameArea.setPrefSize(APP_W, APP_H);
-		gameArea.setBorder(new Border(new BorderStroke(Color.BLACK, 
-				BorderStrokeStyle.DASHED, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
 		
-	
+
 		Group snakeBody = new Group();
 		snake = snakeBody.getChildren();
 		
 		Rectangle food = new Rectangle(BLOCK_SIZE,BLOCK_SIZE,Color.RED);
-		food.setArcHeight(20);
-		food.setArcWidth(20);
+		food.setFill(new ImagePattern(apple));
+		
 		setNewFoodPosition(snake, food);
 		
-		KeyFrame frame = new KeyFrame(Duration.seconds(0.1), event -> {
+		KeyFrame frame = new KeyFrame(Duration.seconds(0.06), event -> {
 			if(!running) 
 				return;
 			
@@ -132,9 +132,13 @@ public class Main extends Application{
 			boolean toRemove = snake.size() > 1;
 			
 			Node tail = toRemove ? snake.remove(snake.size()-1) : snake.get(0);
+			((Shape) tail).setFill(Color.MEDIUMSEAGREEN);
+			((Rectangle) tail).setArcHeight(50);
+			((Rectangle) tail).setArcWidth(50);
 			
 			double tailX = tail.getTranslateX();
 			double tailY = tail.getTranslateY();
+			
 			
 			switch (direction) {
 			case UP:
@@ -175,9 +179,11 @@ public class Main extends Application{
 			
 			if(tail.getTranslateX() == food.getTranslateX() && tail.getTranslateY() == food.getTranslateY()) {
 				
-				Rectangle rect = new Rectangle(BLOCK_SIZE,BLOCK_SIZE);
+				Rectangle rect = new Rectangle(BLOCK_SIZE,BLOCK_SIZE,Color.MEDIUMSEAGREEN);
 				rect.setTranslateX(tailX);
 				rect.setTranslateY(tailY);
+				rect.setArcHeight(50);
+				rect.setArcWidth(50);
 				
 				snake.add(rect);
 				
@@ -190,54 +196,33 @@ public class Main extends Application{
 		timeline.getKeyFrames().add(frame);
 		timeline.setCycleCount(Timeline.INDEFINITE);
 		
-		gameArea.getChildren().addAll(food,snakeBody);
-		root.getChildren().addAll(gameArea,menuPanel,canvas);
+		gameArea.getChildren().addAll(food,snakeBody,scorePanel);
 		
-		return root;
+		
+		return gameArea;
 	}
 	
 	private void createScoreFrame() {
 		
-		gc.fillRect(APP_W+20,0, 80,50);
-		gc.setFill(Color.BLUE);
-		Font theFont = Font.font( "Arial", FontWeight.BOLD, 24 );
+		gc.fillRect(APP_W,0, 80,50);
+		gc.setFill(Color.ORANGE);
+		Font theFont = Font.font( "Helvetica", FontWeight.BOLD, 30);
 		gc.setFont(theFont);
 		gc.setStroke(Color.BLACK );
-        gc.setLineWidth(1);
-        pointsText = "" + 0;
-		gc.fillText(pointsText, APP_W, 0);
+        pointsText = "Points: " + 0;
+		gc.fillText(pointsText,APP_W - 100,0);
 		gc.setLineWidth(1);
 		
 	}
 	
 	private void updateScoreFrame() {
-		gc.clearRect(0, 0, APP_W + 100, 100);
+		gc.clearRect(0, 0, APP_W , 100);
 		points.set(points.get()+1);
 		System.out.println(points);
 		
-		pointsText = points.get()+"";
-		gc.fillText(pointsText, APP_W, 40);
-		gc.strokeText( pointsText, APP_W, 40 );
-	}
-
-	private void createMenuPanel() {
-		
-		menuPanel = new HBox();
-		menuPanel.setPadding(new Insets(10));
-		menuPanel.setLayoutY(APP_H + (BLOCK_SIZE/2));
-		menuPanel.setSpacing(10);
-		
-		pauseButton = new Button("_Pause");
-		menuPanel.getChildren().add(pauseButton);
-		
-	
-		pauseButton.setOnAction( k -> {
-			if (timeline.getStatus() == Status.RUNNING) {
-				timeline.pause();
-			} else if(timeline.getStatus() == Status.PAUSED){
-				timeline.playFromStart();
-			}
-		});
+		pointsText = "Points: " + points.get();
+		gc.fillText(pointsText, APP_W - 200, 40);
+		gc.strokeText( pointsText, APP_W - 200, 40 );
 	}
 
 	private int[] getRandomCoordinates() {
@@ -268,7 +253,6 @@ public class Main extends Application{
 					break;
 				}
 			}
-			
 			if(!isOccupied)
 				keepSearching = false;
 		}
@@ -283,7 +267,8 @@ public class Main extends Application{
 	}
 
 	private void startGame() {
-		gc.clearRect(0, 0, APP_W + 100, 100);
+		
+		createScoreFrame();
 		points = new SimpleIntegerProperty(0);
 		direction = Direction.RIGHT;
 		Rectangle head = new Rectangle(BLOCK_SIZE,BLOCK_SIZE);
